@@ -1,29 +1,28 @@
 // screens/SignupScreen.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { account, databases } from '../appwrite';
+import { account } from '../appwrite';
+import { AuthContext } from '../context/AuthContext';
 
 const SignupScreen = ({ navigation }) => {
+  const { setUser } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const onSignupPress = () => {
-    // Create a new user; pass 'unique()' so Appwrite generates a unique ID
+    // Step 1: Create user with unique() ID, email, password, and name = email
     account.create('unique()', email, password, email)
-      .then((user) => {
-        // Once the user is created, create a document in your "users" collection.
-        const data = {
-          email,
-          role: 'citizen'
-        };
-        // Use user.$id as the document ID.
-        databases.createDocument('67fe336b0006e4bd3c23', '67fe33bf001f373e0314', user.$id, data)
-          .then(() => {
-            // Account and document created successfully.
-          })
-          .catch((error) => {
-            alert("Error saving user data: " + error.message);
-          });
+      .then(async (user) => {
+        // Step 2: Update the user's preferences to set label = "citizen"
+        await account.updatePrefs({ label: 'citizen' });
+        
+        // Step 3: Immediately create a session so the user is logged in
+        await account.createEmailPasswordSession(email, password);
+
+        // Step 4: Retrieve the updated user object (which should now have prefs.label = 'citizen')
+        const updatedUser = await account.get();
+        setUser(updatedUser);
+
       })
       .catch((error) => {
         alert("Error during signup: " + error.message);

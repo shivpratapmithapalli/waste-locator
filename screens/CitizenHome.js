@@ -1,16 +1,23 @@
 // screens/CitizenHome.js
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { account } from '../appwrite';
+import { AuthContext } from '../context/AuthContext';
 
-const CitizenHome = () => {
+const CitizenHome = ({ navigation }) => {
+  const { setUser } = useContext(AuthContext);
+
   const onLogoutPress = () => {
-    account.deleteSession('current')
+    account.get()
       .then(() => {
-        // User logged out
+        return account.deleteSession('current');
       })
       .catch((error) => {
-        alert(error.message);
+        console.log("Logout error:", error.message);
+      })
+      .finally(() => {
+        // Clear the user from the global context; App.js will re-render to show the Auth flow.
+        setUser(null);
       });
   };
 
@@ -27,5 +34,5 @@ export default CitizenHome;
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 28, marginBottom: 20 }
+  title: { fontSize: 28, marginBottom: 20 },
 });

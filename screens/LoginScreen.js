@@ -1,16 +1,20 @@
 // screens/LoginScreen.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { account } from '../appwrite';
+import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { setUser } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const onLoginPress = () => {
-    account.createEmailSession(email, password)
-      .then((response) => {
-        // Successful login; App.js will now show the main navigator.
+    account.createEmailPasswordSession(email, password)
+      .then(async () => {
+        // Retrieve user details including label from auth and update context.
+        const userData = await account.get();
+        setUser(userData);
       })
       .catch((error) => {
         alert(error.message);
