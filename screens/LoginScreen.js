@@ -8,13 +8,22 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const onLoginPress = () => {
-    account.createEmailSession(email, password)
-      .then((response) => {
-        // Successful login; App.js will now show the main navigator.
-      })
-      .catch((error) => {
-        alert(error.message);
-      });
+    // Check if the user is the admin using static credentials.
+    if (email === 'admin@example.com' && password === 'admin123') {
+      // For admin, navigate directly to AdminHome.
+      navigation.replace('AdminHome');
+    } else {
+      // For citizen users, use Appwrite authentication.
+      account.createEmailSession(email, password)
+        .then((response) => {
+          // Successful login; App.js will now show the main navigator (which will load CitizenHome based on role).
+          // Optionally, you can navigate explicitly if needed:
+          navigation.replace('CitizenHome');
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    }
   };
 
   return (
