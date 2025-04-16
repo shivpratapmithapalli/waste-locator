@@ -8,11 +8,5 @@ client
   .setProject('67fe2c390032dbff76c5');              
 
 // Initialize the Account service
-const account = new Account(client);
-
-// Initialize the Databases service
-// Replace [DATABASE_ID] with your actual database id from Appwrite.
-const databases = new Databases(client, '[DATABASE_ID]');
-
-export { client, account, databases };
-
+export const account = new Account(client);
+export const databases = new Databases(client, '67fe336b0006e4bd3c23');

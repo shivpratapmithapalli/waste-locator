@@ -1,28 +1,24 @@
 // screens/LoginScreen.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { account } from '../appwrite';
+import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { setUser } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const onLoginPress = () => {
-    // Check if the user is the admin using static credentials.
-    if (email === 'admin@example.com' && password === 'admin123') {
-      // For admin, navigate directly to AdminHome using the correct route name.
-      navigation.replace('AdminHome');
-    } else {
-      // For citizen users, use Appwrite authentication.
-      account.createEmailSession(email, password)
-        .then((response) => {
-          // Successful login; navigate to the citizen home screen.
-          navigation.replace('CitizenHome');
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
-    }
+    account.createEmailPasswordSession(email, password)
+      .then(async () => {
+        // Retrieve user details including label from auth and update context.
+        const userData = await account.get();
+        setUser(userData);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
   };
 
   return (

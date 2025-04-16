@@ -1,29 +1,35 @@
 // App.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AuthNavigator from './navigation/AuthNavigator';
-import AppNavigator from './navigation/AppNavigator';
-import { account } from './appwrite';
 import { ActivityIndicator, View } from 'react-native';
+import AuthNavigator from './navigation/AuthNavigator';
+import MainNavigator from './navigation/MainNavigator';
+import { account } from './appwrite';
+import { AuthContext, AuthProvider } from './context/AuthContext';
 
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
+const AppContent = () => {
+  const [loading, setLoading] = useState(true);
+  const { user, setUser } = useContext(AuthContext);
 
   useEffect(() => {
-    // Check for an active session
-    account.get()
-      .then((response) => {
-        setUser(response);
-        setInitializing(false);
-      })
-      .catch((error) => {
+    const checkSession = async () => {
+      try {
+        // See if there's an active session
+        await account.getSession('current');
+        // Retrieve the user data including preferences
+        const userData = await account.get();
+        setUser(userData);
+      } catch (error) {
         setUser(null);
-        setInitializing(false);
-      });
-  }, []);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    checkSession();
+  }, [setUser]);
 
-  if (initializing) {
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -33,9 +39,20 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      {user ? <AppNavigator /> : <AuthNavigator />}
+      {user ? (
+        // Pass the role based on user preferences: user.prefs.label
+        <MainNavigator role={user.prefs?.label} />
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };
+
+const App = () => (
+  <AuthProvider>
+    <AppContent />
+  </AuthProvider>
+);
 
 export default App;
